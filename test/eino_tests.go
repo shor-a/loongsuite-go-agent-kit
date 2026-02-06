@@ -33,6 +33,7 @@ func init() {
 		NewGeneralTestCase("eino-qwen-invoke-test", eino_module_name, "v0.7.13", "", "1.24", "", TestQwenInvokeEino),
 		NewGeneralTestCase("eino-qwen-stream-test", eino_module_name, "v0.7.13", "", "1.24", "", TestQwenStreamEino),
 		NewGeneralTestCase("eino-document-test", eino_module_name, "v0.7.13", "", "1.24", "", TestDocumentEino),
+		NewGeneralTestCase("eino-span-kind-test", eino_module_name, "v0.7.13", "", "1.24", "", TestSpanKindEino),
 		NewGeneralTestCase("test-invoke-chatmodel-metrics", eino_module_name, "v0.7.13", "", "1.24", "", TestInvokeChatModelMetrics),
 		NewGeneralTestCase("test-stream-chatmodel-metrics", eino_module_name, "v0.7.13", "", "1.24", "", TestStreamChatModelMetrics),
 		NewLatestDepthTestCase("eino-latest-depth-test", eino_dependency_name, eino_module_name, "v0.7.13", "", "1.24", "", TestOpenAIInvokeEino),
@@ -42,6 +43,7 @@ func init() {
 		NewMuzzleTestCase("eino-muzzle-test-ollama-invoke", eino_dependency_name, eino_module_name, "v0.7.13", "", "1.24", "", []string{"go", "build", "test_ollama_invoke_chatmodel.go", "eino_common.go"}),
 		NewMuzzleTestCase("eino-muzzle-test-ollama-stream", eino_dependency_name, eino_module_name, "v0.7.13", "", "1.24", "", []string{"go", "build", "test_ollama_stream_chatmodel.go", "eino_common.go"}),
 		NewMuzzleTestCase("eino-muzzle-test-document-test", eino_dependency_name, eino_module_name, "v0.7.13", "", "1.24", "", []string{"go", "build", "test_document_graph.go", "eino_common.go"}),
+		NewMuzzleTestCase("eino-muzzle-test-span-kind", eino_dependency_name, eino_module_name, "v0.7.13", "", "1.24", "", []string{"go", "build", "test_span_kind.go", "eino_common.go"}),
 	)
 }
 
@@ -55,6 +57,12 @@ func TestDocumentEino(t *testing.T, env ...string) {
 	UseApp("eino/v0.7.13")
 	RunGoBuild(t, "go", "build", "test_document_graph.go", "eino_common.go")
 	RunApp(t, "test_document_graph", env...)
+}
+
+func TestSpanKindEino(t *testing.T, env ...string) {
+	UseApp("eino/v0.7.13")
+	RunGoBuild(t, "go", "build", "test_span_kind.go", "eino_common.go")
+	RunApp(t, "test_span_kind", env...)
 }
 
 func TestOpenAIInvokeEino(t *testing.T, env ...string) {

@@ -48,6 +48,7 @@ func einoModelCallHandler(config ChatModelConfig) *callbacksutils.ModelCallbackH
 		OnStart: func(ctx context.Context, runInfo *callbacks.RunInfo, input *model.CallbackInput) context.Context {
 			request := einoLLMRequest{
 				operationName:    OperationNameChat,
+				spanKind:         ai.GenAISpanKindGeneration,
 				serverAddress:    config.BaseURL,
 				frequencyPenalty: config.FrequencyPenalty,
 				presencePenalty:  config.PresencePenalty,
@@ -160,6 +161,7 @@ func einoPromptCallbackHandler() *callbacksutils.PromptCallbackHandler {
 		OnStart: func(ctx context.Context, runInfo *callbacks.RunInfo, input *prompt.CallbackInput) context.Context {
 			request := einoRequest{
 				operationName: OperationNamePrompt,
+				spanKind:      ai.GenAISpanKindTask,
 				input:         make(map[string]any),
 			}
 			promptInput, err := sonic.MarshalString(input)
@@ -195,6 +197,7 @@ func einoEmbeddingCallbackHandler() *callbacksutils.EmbeddingCallbackHandler {
 		OnStart: func(ctx context.Context, runInfo *callbacks.RunInfo, input *embedding.CallbackInput) context.Context {
 			request := einoRequest{
 				operationName: OperationNameEmbeddings,
+				spanKind:      ai.GenAISpanKindEmbedding,
 				input:         make(map[string]any),
 			}
 			if input.Config != nil {
@@ -237,6 +240,7 @@ func einoIndexerCallbackHandler() *callbacksutils.IndexerCallbackHandler {
 		OnStart: func(ctx context.Context, runInfo *callbacks.RunInfo, input *indexer.CallbackInput) context.Context {
 			request := einoRequest{
 				operationName: OperationNameIndexer,
+				spanKind:      ai.GenAISpanKindTask,
 				input:         make(map[string]any),
 			}
 			docs, err := sonic.MarshalString(input)
@@ -271,6 +275,7 @@ func einoRetrieverCallbackHandler() *callbacksutils.RetrieverCallbackHandler {
 		OnStart: func(ctx context.Context, runInfo *callbacks.RunInfo, input *retriever.CallbackInput) context.Context {
 			request := einoRequest{
 				operationName: OperationNameRetriever,
+				spanKind:      ai.GenAISpanKindRetriever,
 				input:         make(map[string]any),
 			}
 			if input != nil {
@@ -310,6 +315,7 @@ func einoLoaderCallbackHandler() *callbacksutils.LoaderCallbackHandler {
 		OnStart: func(ctx context.Context, runInfo *callbacks.RunInfo, input *document.LoaderCallbackInput) context.Context {
 			request := einoRequest{
 				operationName: OperationNameLoader,
+				spanKind:      ai.GenAISpanKindTask,
 				input:         make(map[string]any),
 			}
 			if input != nil {
@@ -344,6 +350,7 @@ func einoToolCallbackHandler() *callbacksutils.ToolCallbackHandler {
 		OnStart: func(ctx context.Context, info *callbacks.RunInfo, input *tool.CallbackInput) context.Context {
 			request := einoRequest{
 				operationName: OperationNameExecuteTool,
+				spanKind:      ai.GenAISpanKindTool,
 				input:         make(map[string]any),
 			}
 			request.input["tool_name"] = info.Name
@@ -417,6 +424,7 @@ func einoToolsNodeCallbackHandler() *callbacksutils.ToolsNodeCallbackHandlers {
 		OnStart: func(ctx context.Context, info *callbacks.RunInfo, input *schema.Message) context.Context {
 			request := einoRequest{
 				operationName: OperationNameToolNode,
+				spanKind:      ai.GenAISpanKindTool,
 				input:         make(map[string]any),
 			}
 			request.input["tool_node_name"] = info.Name
@@ -503,6 +511,7 @@ func einoTransformCallbackHandler() *callbacksutils.TransformerCallbackHandler {
 		OnStart: func(ctx context.Context, runInfo *callbacks.RunInfo, input *document.TransformerCallbackInput) context.Context {
 			request := einoRequest{
 				operationName: OperationNameTransform,
+				spanKind:      ai.GenAISpanKindTask,
 				input:         make(map[string]any),
 			}
 			transformInput, err := sonic.MarshalString(input)
@@ -557,34 +566,61 @@ func (c ComposeHandler) Needed(_ context.Context, runInfo *callbacks.RunInfo, ti
 }
 
 func (c ComposeHandler) OnStart(ctx context.Context, info *callbacks.RunInfo, input callbacks.CallbackInput) context.Context {
-	request := einoRequest{operationName: c.operationName}
-	request.input = map[string]interface{}{
-		"name": info.Name,
+	spanKind := ai.GenAISpanKindTask
+	if ctx.Value(einoRootSpanKey{}) == nil {
+		spanKind = ai.GenAISpanKindWorkflow
+		ctx = context.WithValue(ctx, einoRootSpanKey{}, true)
 	}
-	return einoCommonInstrument.Start(ctx, request)
+	request := einoRequest{
+		operationName: c.operationName,
+		spanKind:      spanKind,
+		input: map[string]interface{}{
+			"name": info.Name,
+		},
+	}
+	ctx = einoCommonInstrument.Start(ctx, request)
+	return context.WithValue(ctx, composeRequestKey{}, request)
 }
 
 func (c ComposeHandler) OnEnd(ctx context.Context, info *callbacks.RunInfo, output callbacks.CallbackOutput) context.Context {
-	request := einoRequest{operationName: c.operationName}
+	request, ok := ctx.Value(composeRequestKey{}).(einoRequest)
+	if !ok {
+		request = einoRequest{operationName: c.operationName}
+	}
 	response := einoResponse{operationName: c.operationName}
 	einoCommonInstrument.End(ctx, request, response, nil)
 	return ctx
 }
 
 func (c ComposeHandler) OnError(ctx context.Context, info *callbacks.RunInfo, err error) context.Context {
-	request := einoRequest{operationName: c.operationName}
+	request, ok := ctx.Value(composeRequestKey{}).(einoRequest)
+	if !ok {
+		request = einoRequest{operationName: c.operationName}
+	}
 	response := einoResponse{operationName: c.operationName}
 	einoCommonInstrument.End(ctx, request, response, err)
 	return ctx
 }
 
 func (c ComposeHandler) OnStartWithStreamInput(ctx context.Context, info *callbacks.RunInfo, input *schema.StreamReader[callbacks.CallbackInput]) context.Context {
-	request := einoRequest{operationName: c.operationName}
-	return einoCommonInstrument.Start(ctx, request)
+	spanKind := ai.GenAISpanKindTask
+	if ctx.Value(einoRootSpanKey{}) == nil {
+		spanKind = ai.GenAISpanKindWorkflow
+		ctx = context.WithValue(ctx, einoRootSpanKey{}, true)
+	}
+	request := einoRequest{
+		operationName: c.operationName,
+		spanKind:      spanKind,
+	}
+	ctx = einoCommonInstrument.Start(ctx, request)
+	return context.WithValue(ctx, composeRequestKey{}, request)
 }
 
 func (c ComposeHandler) OnEndWithStreamOutput(ctx context.Context, info *callbacks.RunInfo, output *schema.StreamReader[callbacks.CallbackOutput]) context.Context {
-	request := einoRequest{operationName: c.operationName}
+	request, ok := ctx.Value(composeRequestKey{}).(einoRequest)
+	if !ok {
+		request = einoRequest{operationName: c.operationName}
+	}
 	response := einoResponse{operationName: c.operationName}
 	einoCommonInstrument.End(ctx, request, response, nil)
 	return ctx

@@ -30,12 +30,19 @@ type einoCommonAttrsGetter struct {
 }
 
 var _ ai.CommonAttrsGetter[einoRequest, einoResponse] = einoCommonAttrsGetter{}
+var _ ai.GenAISpanKindGetter[einoRequest] = einoCommonAttrsGetter{}
 
 func (einoCommonAttrsGetter) GetAIOperationName(request einoRequest) string {
 	return request.operationName
 }
 func (einoCommonAttrsGetter) GetAISystem(request einoRequest) string {
 	return "eino"
+}
+func (einoCommonAttrsGetter) GetGenAISpanKind(request einoRequest) ai.GenAISpanKind {
+	if request.spanKind == "" {
+		return ai.GenAISpanKindUnknown
+	}
+	return request.spanKind
 }
 
 type LExperimentalAttributeExtractor struct {
@@ -44,6 +51,13 @@ type LExperimentalAttributeExtractor struct {
 
 func (l LExperimentalAttributeExtractor) OnStart(attributes []attribute.KeyValue, parentContext context.Context, request einoRequest) ([]attribute.KeyValue, context.Context) {
 	attributes, parentContext = l.Base.OnStart(attributes, parentContext, request)
+
+	spanKind := request.spanKind
+	if spanKind == "" {
+		spanKind = ai.GenAISpanKindUnknown
+	}
+	attributes = append(attributes, spanKind.Attribute())
+
 	if request.input != nil {
 		var val attribute.Value
 		for k, v := range request.input {

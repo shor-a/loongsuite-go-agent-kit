@@ -28,8 +28,8 @@ import (
 )
 
 var _ ai.CommonAttrsGetter[einoLLMRequest, any] = einoLLMAttrsGetter{}
-
 var _ ai.LLMAttrsGetter[einoLLMRequest, einoLLMResponse] = einoLLMAttrsGetter{}
+var _ ai.GenAISpanKindGetter[einoLLMRequest] = einoLLMAttrsGetter{}
 
 type einoLLMAttrsGetter struct{}
 
@@ -39,6 +39,13 @@ func (e einoLLMAttrsGetter) GetAIOperationName(request einoLLMRequest) string {
 
 func (e einoLLMAttrsGetter) GetAISystem(request einoLLMRequest) string {
 	return "eino"
+}
+
+func (e einoLLMAttrsGetter) GetGenAISpanKind(request einoLLMRequest) ai.GenAISpanKind {
+	if request.spanKind == "" {
+		return ai.GenAISpanKindGeneration
+	}
+	return request.spanKind
 }
 
 func (e einoLLMAttrsGetter) GetAIRequestModel(request einoLLMRequest) string {
@@ -198,6 +205,7 @@ func BuildEinoLLMInstrumenter() instrumenter.Instrumenter[einoLLMRequest, einoLL
 	return builder.Init().SetSpanNameExtractor(&ai.AISpanNameExtractor[einoLLMRequest, einoLLMResponse]{Getter: einoLLMAttrsGetter{}}).
 		SetSpanKindExtractor(&instrumenter.AlwaysClientExtractor[einoLLMRequest]{}).
 		AddAttributesExtractor(&LLMExperimentalAttributeExtractor{}).
+		AddAttributesExtractor(&ai.GenAISpanKindAttrsExtractor[einoLLMRequest, einoLLMResponse, einoLLMAttrsGetter]{Getter: einoLLMAttrsGetter{}}).
 		SetInstrumentationScope(instrumentation.Scope{
 			Name:    utils.EINO_SCOPE_NAME,
 			Version: version.Tag,
