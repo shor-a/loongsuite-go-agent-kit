@@ -104,6 +104,19 @@ func (tc *traceContext) TakeSnapShot() interface{} {
 		return &traceContext{nil, 0, nil}
 	}
 	last := tc.tail()
+
+	// If automatic goroutine span creation is enabled, return an asyncTraceContext
+	// that will create a child span when the goroutine first accesses the trace context
+	if goroutineAutoSpanEnabled && last != nil {
+		callerInfo := getGoroutineCallerInfo(3) // Skip: TakeSnapShot -> contextPropagate -> newproc1
+		return &asyncTraceContext{
+			parentSpanCtx:   last.SpanContext(),
+			callerInfo:      callerInfo,
+			autoSpanCreated: false,
+			autoSpan:        nil,
+		}
+	}
+
 	sw := &spanWrapper{last, nil}
 	return &traceContext{sw, 1, nil}
 }
@@ -145,7 +158,20 @@ func traceContextAddSpan(span trace.Span) {
 
 func GetTraceAndSpanId() (string, string) {
 	tc := GetTraceContextFromGLS()
-	if tc == nil || tc.(*traceContext).tail() == nil {
+	if tc == nil {
+		return "", ""
+	}
+
+	// Handle asyncTraceContext
+	if atc, ok := tc.(*asyncTraceContext); ok {
+		spanCtx := atc.getSpanContext()
+		if spanCtx.IsValid() {
+			return spanCtx.TraceID().String(), spanCtx.SpanID().String()
+		}
+		return "", ""
+	}
+
+	if tc.(*traceContext).tail() == nil {
 		return "", ""
 	}
 	ctx := tc.(*traceContext).tail().SpanContext()
@@ -166,6 +192,16 @@ func SpanFromGLS() trace.Span {
 	if gls == nil {
 		return nil
 	}
+
+	// Handle asyncTraceContext - create auto span if enabled
+	if atc, ok := gls.(*asyncTraceContext); ok {
+		if goroutineAutoSpanEnabled {
+			return atc.ensureAutoSpan()
+		}
+		// If auto span not enabled, return nil (no span in this goroutine yet)
+		return nil
+	}
+
 	return gls.(*traceContext).tail()
 }
 
@@ -174,5 +210,14 @@ func LocalRootSpanFromGLS() trace.Span {
 	if gls == nil {
 		return nil
 	}
+
+	// Handle asyncTraceContext
+	if atc, ok := gls.(*asyncTraceContext); ok {
+		if goroutineAutoSpanEnabled && atc.autoSpanCreated {
+			return atc.autoSpan
+		}
+		return nil
+	}
+
 	return gls.(*traceContext).lcs
 }

@@ -1,0 +1,27 @@
+[
+  {
+    "Version": "[0.1.0,)",
+    "ImportPath": "golang.org/x/sync/errgroup",
+    "ReceiverType": "\\*Group",
+    "Function": "Go",
+    "OnEnter": "errgroupGoOnEnter",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/errgroup"
+  },
+  {
+    "Version": "[0.1.0,)",
+    "ImportPath": "golang.org/x/sync/errgroup",
+    "ReceiverType": "\\*Group",
+    "Function": "TryGo",
+    "OnEnter": "errgroupTryGoOnEnter",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/errgroup"
+  },
+  {
+    "Version": "[0.1.0,)",
+    "ImportPath": "golang.org/x/sync/errgroup",
+    "ReceiverType": "\\*Group",
+    "Function": "Wait",
+    "OnEnter": "errgroupWaitOnEnter",
+    "OnExit": "errgroupWaitOnExit",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/errgroup"
+  }
+]

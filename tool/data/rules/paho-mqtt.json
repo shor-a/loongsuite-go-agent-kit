@@ -1,0 +1,36 @@
+[
+  {
+    "Version": "[1.3.0,)",
+    "ImportPath": "github.com/eclipse/paho.mqtt.golang",
+    "ReceiverType": "\\*client",
+    "Function": "Publish",
+    "OnEnter": "publishOnEnter",
+    "OnExit": "publishOnExit",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/paho-mqtt"
+  },
+  {
+    "Version": "[1.3.0,)",
+    "ImportPath": "github.com/eclipse/paho.mqtt.golang",
+    "ReceiverType": "\\*client",
+    "Function": "Subscribe",
+    "OnEnter": "subscribeOnEnter",
+    "OnExit": "subscribeOnExit",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/paho-mqtt"
+  },
+  {
+    "Version": "[1.3.0,)",
+    "ImportPath": "github.com/eclipse/paho.mqtt.golang",
+    "ReceiverType": "\\*client",
+    "Function": "SubscribeMultiple",
+    "OnEnter": "subscribeMultipleOnEnter",
+    "OnExit": "subscribeMultipleOnExit",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/paho-mqtt"
+  },
+  {
+    "Version": "[1.3.0,)",
+    "ImportPath": "github.com/eclipse/paho.mqtt.golang",
+    "Function": "NewClient",
+    "OnExit": "afterNewClient",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/paho-mqtt"
+  }
+]

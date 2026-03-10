@@ -1,0 +1,38 @@
+[
+  {
+    "Version": "[1.0.0,)",
+    "ImportPath": "solace.dev/go/messaging/pkg/solace",
+    "ReceiverType": "\\*directMessagePublisherImpl",
+    "Function": "Publish",
+    "OnEnter": "directPublisherPublishOnEnter",
+    "OnExit": "directPublisherPublishOnExit",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/solace"
+  },
+  {
+    "Version": "[1.0.0,)",
+    "ImportPath": "solace.dev/go/messaging/pkg/solace",
+    "ReceiverType": "\\*persistentMessagePublisherImpl",
+    "Function": "Publish",
+    "OnEnter": "persistentPublisherPublishOnEnter",
+    "OnExit": "persistentPublisherPublishOnExit",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/solace"
+  },
+  {
+    "Version": "[1.0.0,)",
+    "ImportPath": "solace.dev/go/messaging/pkg/solace",
+    "ReceiverType": "\\*directMessageReceiverImpl",
+    "Function": "ReceiveMessage",
+    "OnEnter": "receiveMessageOnEnter",
+    "OnExit": "receiveMessageOnExit",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/solace"
+  },
+  {
+    "Version": "[1.0.0,)",
+    "ImportPath": "solace.dev/go/messaging/pkg/solace",
+    "ReceiverType": "\\*persistentMessageReceiverImpl",
+    "Function": "ReceiveMessage",
+    "OnEnter": "receiveMessageOnEnter",
+    "OnExit": "receiveMessageOnExit",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/solace"
+  }
+]
