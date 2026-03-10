@@ -248,3 +248,79 @@ func BuildSolaceConsumeInstrumenter() *instrumenter.PropagatingFromUpstreamInstr
 			return &consumeCarrier{req: req}
 		}, otel.GetTextMapPropagator())
 }
+
+// SolaceAckAttrsGetter implements MessageAttrsGetter for Solace ack operations
+type SolaceAckAttrsGetter struct{}
+
+var _ message.MessageAttrsGetter[SolaceConsumeRequest, any] = SolaceAckAttrsGetter{}
+
+func (SolaceAckAttrsGetter) GetSystem(request SolaceConsumeRequest) string {
+	return "solace"
+}
+
+func (SolaceAckAttrsGetter) GetDestination(request SolaceConsumeRequest) string {
+	return request.Topic
+}
+
+func (SolaceAckAttrsGetter) GetDestinationTemplate(request SolaceConsumeRequest) string {
+	return ""
+}
+
+func (SolaceAckAttrsGetter) IsTemporaryDestination(request SolaceConsumeRequest) bool {
+	return false
+}
+
+func (SolaceAckAttrsGetter) IsAnonymousDestination(request SolaceConsumeRequest) bool {
+	return false
+}
+
+func (SolaceAckAttrsGetter) GetConversationId(request SolaceConsumeRequest) string {
+	return request.CorrelationID
+}
+
+func (SolaceAckAttrsGetter) GetMessageBodySize(request SolaceConsumeRequest) int64 {
+	return 0
+}
+
+func (SolaceAckAttrsGetter) GetMessageEnvelopSize(request SolaceConsumeRequest) int64 {
+	return 0
+}
+
+func (SolaceAckAttrsGetter) GetMessageId(request SolaceConsumeRequest, response any) string {
+	return request.MessageID
+}
+
+func (SolaceAckAttrsGetter) GetClientId(request SolaceConsumeRequest) string {
+	return ""
+}
+
+func (SolaceAckAttrsGetter) GetBatchMessageCount(request SolaceConsumeRequest, response any) int64 {
+	return 1
+}
+
+func (SolaceAckAttrsGetter) GetMessageHeader(request SolaceConsumeRequest, name string) []string {
+	return []string{}
+}
+
+func (SolaceAckAttrsGetter) GetDestinationPartitionId(request SolaceConsumeRequest) string {
+	return ""
+}
+
+// BuildSolaceAckInstrumenter creates the instrumenter for Solace ack operations
+func BuildSolaceAckInstrumenter() *instrumenter.Instrumenter[SolaceConsumeRequest, any] {
+	builder := instrumenter.Builder[SolaceConsumeRequest, any]{}
+	return builder.Init().
+		SetSpanNameExtractor(&message.MessageSpanNameExtractor[SolaceConsumeRequest, any]{
+			Getter:        SolaceAckAttrsGetter{},
+			OperationName: message.SETTLE,
+		}).
+		SetSpanKindExtractor(&instrumenter.AlwaysClientExtractor[SolaceConsumeRequest]{}).
+		AddAttributesExtractor(&message.MessageAttrsExtractor[SolaceConsumeRequest, any, SolaceAckAttrsGetter]{
+			Operation: message.SETTLE,
+		}).
+		SetInstrumentationScope(instrumentation.Scope{
+			Name:    utils.SOLACE_SCOPE_NAME,
+			Version: version.Tag,
+		}).
+		BuildInstrumenter()
+}

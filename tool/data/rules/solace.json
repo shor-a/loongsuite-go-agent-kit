@@ -34,5 +34,30 @@
     "OnEnter": "receiveMessageOnEnter",
     "OnExit": "receiveMessageOnExit",
     "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/solace"
+  },
+  {
+    "Version": "[1.0.0,)",
+    "ImportPath": "solace.dev/go/messaging/pkg/solace",
+    "ReceiverType": "\\*directMessageReceiverImpl",
+    "Function": "ReceiveAsync",
+    "OnEnter": "receiveAsyncOnEnter",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/solace"
+  },
+  {
+    "Version": "[1.0.0,)",
+    "ImportPath": "solace.dev/go/messaging/pkg/solace",
+    "ReceiverType": "\\*persistentMessageReceiverImpl",
+    "Function": "ReceiveAsync",
+    "OnEnter": "receiveAsyncOnEnter",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/solace"
+  },
+  {
+    "Version": "[1.0.0,)",
+    "ImportPath": "solace.dev/go/messaging/pkg/solace",
+    "ReceiverType": "\\*persistentMessageReceiverImpl",
+    "Function": "Ack",
+    "OnEnter": "ackOnEnter",
+    "OnExit": "ackOnExit",
+    "Path": "github.com/alibaba/loongsuite-go-agent/pkg/rules/solace"
   }
 ]

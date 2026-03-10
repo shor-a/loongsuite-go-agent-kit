@@ -22,6 +22,9 @@ var SolacePublishInstrumenter = BuildSolacePublishInstrumenter()
 // SolaceConsumeInstrumenter is the global instrumenter for Solace consume operations
 var SolaceConsumeInstrumenter = BuildSolaceConsumeInstrumenter()
 
+// SolaceAckInstrumenter is the global instrumenter for Solace ack operations
+var SolaceAckInstrumenter = BuildSolaceAckInstrumenter()
+
 // solaceEnabler controls whether Solace instrumentation is enabled
 type solaceEnabler struct {
 	enabled bool
